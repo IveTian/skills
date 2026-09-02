@@ -1,3 +1,8 @@
+---
+name: product-ui-design-rules
+description: "Applies product UI design rules such as progressive disclosure, action hierarchy, contextual presentation, and CRUD interaction patterns."
+---
+
 # Subskill: Product UI Design Rules
 
 ## Goal

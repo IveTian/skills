@@ -1,3 +1,8 @@
+---
+name: ai-ui-interaction-guard
+description: "Prevents AI coding agents from flattening interactive product flows into static pages by enforcing interaction planning, product UI rules, and post-implementation validation."
+---
+
 # AI UI Interaction Design Guard
 
 ## Purpose

@@ -1,3 +1,8 @@
+---
+name: interaction-planning
+description: "Derives user intents, actions, UI states, transitions, visibility rules, and presentation modes before UI implementation."
+---
+
 # Subskill: Interaction Planning
 
 ## Goal

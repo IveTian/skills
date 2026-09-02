@@ -1,3 +1,8 @@
+---
+name: ui-interaction-validation
+description: "Validates implemented UI state-by-state, checking interaction behavior, visibility, form lifecycle, edge states, and screenshot-completeness traps."
+---
+
 # Subskill: UI Interaction Validation
 
 ## Goal
