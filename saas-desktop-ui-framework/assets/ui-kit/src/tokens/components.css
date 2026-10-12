@@ -1,0 +1,208 @@
+/*
+ * 设计变量 · 第三层：组件（Component）。见 docs/adr/0008-design-tokens.md。
+ * 某个组件专用的取值（高度、内边距、圆角、专属颜色……）。优先引用语义层；
+ * 组件独有、语义层没有对应用途的尺寸可引用基础层尺寸刻度，或直接写布局几何（px 宽度等）。
+ * 不写颜色、字号、字重、时长等字面量，也不做明暗切换（明暗由语义层负责）。
+ */
+:root {
+  /* ---------- 窗口外壳（侧栏与内容面板） ---------- */
+  --chrome: var(--surface-window);
+  --chrome-hover: var(--fill-translucent-hover);
+  --chrome-selected: var(--fill-translucent-selected);
+  --chrome-active: var(--fill-translucent-active);
+  --chrome-border: var(--border-translucent);
+  --chrome-ink-2: var(--ink-window-2);
+  --chrome-ink-3: var(--ink-window-3);
+  --canvas: var(--surface-canvas);
+  --canvas-border: var(--border-canvas);
+
+  /* ---------- 动效：Card resize（transitions-dev，侧栏展开 / 收起） ---------- */
+  --resize-dur: var(--duration-layout);
+  --resize-ease: var(--easing-emphasized);
+
+  /* ---------- 无障碍隐藏文本 ---------- */
+  --sr-only-size: var(--size-1);
+
+  /* ---------- Button ---------- */
+  /* Linear：控件 28 / 32 / 40 高，圆角 8 */
+  --button-height-sm: var(--size-28);
+  --button-height-md: var(--size-32);
+  --button-height-lg: var(--size-40);
+  --button-padding-x-sm: var(--space-md);
+  --button-padding-x-md: var(--size-14);
+  --button-padding-x-lg: var(--size-18);
+  --button-padding-x-ghost: var(--space-xs);
+  --button-padding-x-quiet: var(--space-sm);
+  --button-radius: var(--radius-md);
+  --button-radius-lg: var(--radius-lg);
+  --card-radius: var(--radius-md);
+  --card-padding: var(--space-xl);
+  --icon-button-size: var(--size-28);
+  --icon-button-radius: var(--radius-pill);
+  --chip-height: var(--size-24);
+  --send-button-size: var(--size-24);
+
+  /* ---------- Field ---------- */
+  --field-height: var(--size-32);
+  --field-radius: var(--radius-md);
+  --field-search-padding-left: var(--size-32);
+
+  /* ---------- Tag / Count / Dot ---------- */
+  --tag-height: var(--size-20);
+  --tag-dot-size: var(--size-6);
+  --count-size: var(--size-20);
+  --dot-size: var(--size-7);
+  --dot-size-sm: var(--size-6);
+  --dot-halo-width: var(--size-3);
+
+  /* ---------- Tooltip / RelativeTime ---------- */
+  /* Linear：白底 + 0.5px 描边 + 淡阴影，11px */
+  --tooltip-bg: var(--surface);
+  --tooltip-ink: var(--ink);
+  --tooltip-radius: var(--radius-md);
+  --tooltip-padding-y: var(--size-5);
+  --tooltip-max-width: 280px;
+  --time-underline-offset: var(--size-3);
+
+  /* ---------- 状态区块 ---------- */
+  --state-radius: var(--radius-xl);
+  --skeleton-height: var(--size-12);
+  --skeleton-radius: var(--radius-sm);
+
+  /* ---------- Dialog / Drawer ---------- */
+  --dialog-width: min(460px, calc(100vw - var(--size-32)));
+  --dialog-max-height: calc(100vh - var(--size-64));
+  --dialog-radius: var(--radius-xl);
+  --drawer-width: min(360px, 92vw);
+
+  /* ---------- Tabs ---------- */
+  --tab-height: var(--size-32);
+  --tab-radius: var(--radius-md);
+  --tab-indicator-width: var(--size-3);
+  --tab-indicator-height: var(--size-16);
+
+  /* ---------- Menu ---------- */
+  --menu-bg: var(--surface);
+  --menu-shadow: var(--shadow-popup);
+  /*
+   * 1:1 对照 Linear 下拉菜单（2026-10-12 产品负责人指定，按其 2× 截图实测）：
+   * 圆角 12、上下内边距 6、行高 32、文字距浮层左缘 14（6 + 8）、高亮块左右缩进 6 且圆角 6（与浮层同心）、
+   * 分隔线贯穿全宽且上下各 6、快捷键 / 附注 12px 常规字重灰色、子菜单为实心 ▸、当前项对勾在行尾。
+   */
+  --menu-min-width: 224px;
+  --menu-radius: var(--radius-xl);
+  --menu-padding: var(--space-xs);
+  --menu-item-height: var(--size-32);
+  --menu-item-padding-x: var(--space-sm);
+  --menu-item-radius: var(--radius-sm);
+  --menu-separator-gap: var(--space-xs);
+  /* 进场位移：向上弹出时从下方来（正值），向下弹出时从上方来（负值） */
+  --menu-enter-offset-up: var(--size-4);
+  --menu-enter-offset-down: var(--size-neg-4);
+  --menu-trigger-height: var(--size-36);
+  --menu-trigger-chip-height: var(--size-24);
+  --avatar-size: var(--size-28);
+
+  /* ---------- Toast ---------- */
+  /* 与菜单同为浮层：表面底色 + 弹层阴影，圆角同内容面板；成功 / 失败只靠图标颜色区分 */
+  --toast-bg: var(--surface);
+  --toast-radius: var(--radius-xl);
+  --toast-padding: var(--space-lg);
+  --toast-close-size: var(--size-20);
+  --toast-viewport-width: min(360px, calc(100vw - var(--size-40)));
+  --toast-enter-offset: var(--size-8);
+
+  /* ---------- Sidebar ---------- */
+  /* Linear：行高 28、行距 1、圆角 8；左内边距 8 + 图标 14 + 间距 6 = 文字左缘 28 */
+  --sidebar-row-gap: var(--size-1);
+  --sidebar-section-gap: var(--space-xl);
+  --sidebar-section-head-height: var(--size-28);
+  --sidebar-section-head-padding-x: var(--size-9);
+  --sidebar-section-action-size: var(--size-22);
+  --sidebar-item-height: var(--size-28);
+  --sidebar-item-height-primary: var(--size-28);
+  --sidebar-item-height-child: var(--size-28);
+  --sidebar-item-padding-x: var(--space-sm);
+  --sidebar-item-gap: var(--space-xs);
+  --sidebar-item-radius: var(--radius-md);
+  /* 展开按钮 = 左内边距 8 + 箭头 14，其后间距 6，文字左缘同为 28 */
+  --sidebar-disclosure-width: var(--size-22);
+  --sidebar-item-indent-child: 28px;
+
+  /* ---------- SideCard / PropertyRow（Linear 右侧栏卡片） ---------- */
+  /* Linear 项目页右侧卡片：白底、圆角 10、左右内边距 12；标题行 28（距卡片顶 6）；属性行 28、行距 8、标签列 90 */
+  --side-card-bg: var(--surface);
+  --side-card-radius: var(--radius-lg);
+  --side-card-padding-x: var(--space-lg);
+  --side-card-padding-y: var(--space-xs);
+  --side-card-head-height: var(--size-28);
+  --side-card-action-size: var(--size-28);
+  --property-row-height: var(--size-28);
+  --property-row-gap: var(--space-sm);
+  --property-label-width: 90px;
+
+  /* ---------- SegmentedControl ---------- */
+  --segmented-radius: var(--radius-md);
+  --segmented-item-height: var(--size-26);
+  --segmented-item-radius: var(--radius-sm);
+
+  /* ---------- ScrollArea ---------- */
+  /* 颜色选择器（ADR 0019）：色块、饱和度 / 亮度面板与色相滑杆 */
+  --color-picker-swatch-size: var(--size-28);
+  --color-picker-input-width: 96px;
+  --color-picker-popup-width: 224px;
+  --color-picker-area-height: 148px;
+  --color-picker-thumb-size: var(--size-14);
+  --color-picker-hue-height: var(--size-12);
+  --color-picker-area-white: var(--color-white);
+  --color-picker-area-black: var(--color-black);
+  --color-picker-hue-track: linear-gradient(
+    to right,
+    var(--color-spectrum-0),
+    var(--color-spectrum-60),
+    var(--color-spectrum-120),
+    var(--color-spectrum-180),
+    var(--color-spectrum-240),
+    var(--color-spectrum-300),
+    var(--color-spectrum-0)
+  );
+  --scrollbar-width: var(--size-8);
+  --scrollbar-thumb: var(--color-gray-400-a45);
+
+  /* ---------- Composer ---------- */
+  /* Linear：白底、圆角 10、内边距 12、无描边只用淡阴影 */
+  --composer-radius: var(--radius-lg);
+  --composer-input-max-height: 240px;
+
+  --composer-stop-size: var(--size-24);
+
+  /* ---------- Chat（消息列表、消息、运行状态、Markdown） ---------- */
+  /* 用户消息：右侧浅灰气泡，最宽 85%；Agent 回复：通栏正文，不加气泡 */
+  --chat-message-gap: var(--space-3xl);
+  --chat-bubble-bg: var(--sunken);
+  --chat-bubble-radius: var(--radius-xl);
+  --chat-bubble-padding-y: var(--space-sm);
+  --chat-bubble-padding-x: var(--space-lg);
+  --chat-bubble-max-width: 85%;
+  --chat-jump-offset: var(--space-lg);
+  --run-line-gap: var(--space-xs);
+  --markdown-block-gap: var(--space-md);
+  --markdown-list-indent: var(--size-22);
+  --markdown-code-bg: var(--sunken);
+  --markdown-code-radius: var(--radius-sm);
+  --markdown-code-padding-x: var(--size-4);
+  --markdown-pre-radius: var(--radius-md);
+  --markdown-pre-padding: var(--space-lg);
+  --markdown-quote-border: var(--size-3);
+  --markdown-table-cell-padding-y: var(--space-xs);
+  --markdown-table-cell-padding-x: var(--space-md);
+
+  /* ---------- Command palette ---------- */
+  --palette-width: min(640px, calc(100vw - var(--size-32)));
+  --palette-radius: var(--radius-xl);
+  --palette-shadow: var(--shadow-spotlight);
+  --palette-search-height: var(--size-48);
+  --palette-item-height: var(--size-32);
+  --palette-item-radius: var(--radius-md);
+  --palette-footer-height: var(--size-36);
+}

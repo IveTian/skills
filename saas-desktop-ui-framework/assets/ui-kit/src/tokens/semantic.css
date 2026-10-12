@@ -1,0 +1,247 @@
+/*
+ * 设计变量 · 第二层：语义（Semantic）。见 docs/adr/0008-design-tokens.md。
+ * 描述「用途」（表面、文字、边框、强调、状态、字号、间距……），只引用基础层，不写字面量。
+ * 深色模式只在这一层重新赋值；组件层与组件样式不感知明暗。
+ */
+:root {
+  /* ---------- 颜色：表面（取值对照 Linear，见 ADR 0010） ---------- */
+  --ground: var(--color-gray-50);
+  --surface: var(--color-white);
+  --surface-raised: var(--color-gray-25);
+  --sunken: var(--color-gray-50);
+  /* 浅色表面上的悬停（白底上约 #f2f2f2，与 Linear 菜单高亮一致） */
+  --hover: var(--color-black-a6);
+  /* 窗口底（侧栏与内容面板四周）与内容面板底 */
+  --surface-window: var(--color-gray-50);
+  --surface-canvas: var(--color-gray-25);
+  /* 反色表面 */
+  --surface-inverse: var(--color-gray-900);
+  --overlay: var(--color-black-a20);
+
+  /* ---------- 颜色：半透明叠加（叠在任意底色上的悬停 / 选中 / 按下） ---------- */
+  /* 在窗口底 #efeff0 上分别约为 Linear 的 #e7e7e8 / #e1e1e2 */
+  --fill-translucent-hover: var(--color-black-a3-5);
+  --fill-translucent-selected: var(--color-black-a6);
+  --fill-translucent-active: var(--color-black-a8);
+  --border-translucent: var(--color-black-a8);
+
+  /* ---------- 颜色：数据可视化（类别色按固定顺序；热力图单一色相由浅到深） ---------- */
+  --viz-series-1: var(--color-viz-blue-450);
+  --viz-series-2: var(--color-viz-orange-500);
+  --viz-seq-empty: var(--color-gray-75);
+  --viz-seq-1: var(--color-viz-blue-250);
+  --viz-seq-2: var(--color-viz-blue-350);
+  --viz-seq-3: var(--color-viz-blue-500);
+  --viz-seq-4: var(--color-viz-blue-650);
+
+  /* ---------- 颜色：边框（细线 0.5px） ---------- */
+  --border: var(--color-gray-100);
+  --border-strong: var(--color-gray-150);
+  --border-canvas: var(--color-gray-100);
+  /* 浮层（菜单、提示、对话框）描边 */
+  --border-popover: var(--color-gray-75);
+
+  /* ---------- 颜色：文字 ---------- */
+  --ink: var(--color-gray-900);
+  --ink-2: var(--color-gray-600);
+  --ink-3: var(--color-gray-400);
+  --ink-inverse: var(--color-white);
+  /* 窗口底上的次要文字 */
+  --ink-window-2: var(--color-gray-600);
+  --ink-window-3: var(--color-gray-400);
+
+  /* ---------- 颜色：强调与状态 ---------- */
+  --accent: var(--color-indigo-500);
+  --accent-hover: var(--color-indigo-600);
+  --accent-soft: var(--color-indigo-50);
+  --accent-ink: var(--color-indigo-600);
+  --on-accent: var(--color-white);
+  --success: var(--color-green-700);
+  --success-soft: var(--color-green-50);
+  --attention: var(--color-orange-700);
+  --attention-soft: var(--color-orange-50);
+  --attention-ink: var(--color-orange-800);
+  --attention-wash: var(--color-orange-25);
+  --danger: var(--color-red-600);
+  --danger-border: var(--color-red-150);
+  --danger-wash: var(--color-red-25);
+  --danger-ink: var(--color-red-800);
+  --on-danger: var(--color-white);
+  --disabled-bg: var(--color-gray-75);
+  --disabled-ink: var(--color-gray-400);
+
+  /* ---------- 阴影（Linear：极淡的双层 / 三层阴影，配合 0.5px 描边） ---------- */
+  --shadow-raised:
+    0 var(--size-3) var(--size-6) var(--size-neg-2) var(--color-black-a2),
+    0 var(--size-1) var(--size-1) var(--color-black-a4);
+  --shadow-soft:
+    0 var(--size-3) var(--size-6) var(--size-neg-2) var(--color-black-a2),
+    0 var(--size-1) var(--size-1) var(--color-black-a4);
+  --shadow-popup:
+    0 var(--size-6) var(--size-18) var(--color-black-a2),
+    0 var(--size-3) var(--size-9) var(--color-black-a4),
+    0 var(--size-1) var(--size-1) var(--color-black-a4);
+  --shadow-dialog:
+    0 var(--size-24) var(--size-48) var(--color-black-a12),
+    0 var(--size-1) var(--size-1) var(--color-black-a4);
+  --shadow-spotlight:
+    0 var(--size-24) var(--size-64) var(--color-black-a20),
+    0 var(--size-1) var(--size-1) var(--color-black-a4);
+
+  /* ---------- 字体 ---------- */
+  --font-family-sans: var(--font-family-inter);
+  --font-family-mono: var(--font-family-system-mono);
+  --font-size-2xs: var(--font-size-11);
+  --font-size-xs: var(--font-size-12);
+  --font-size-sm: var(--font-size-13);
+  --font-size-md: var(--font-size-14);
+  --font-size-lg: var(--font-size-15);
+  --font-size-xl: var(--font-size-16);
+  --font-size-2xl: var(--font-size-18);
+  --font-size-3xl: var(--font-size-22);
+  --font-size-4xl: var(--font-size-26);
+  /* 页面大标题（Linear 设置页 24/32，字距 -0.16px） */
+  --font-size-display: var(--font-size-24);
+  --line-height-none: var(--line-height-1);
+  --line-height-xs: var(--line-height-18);
+  --line-height-sm: var(--line-height-20);
+  --line-height-md: var(--line-height-22);
+  --line-height-lg: var(--line-height-24);
+  --line-height-xl: var(--line-height-26);
+  --line-height-2xl: var(--line-height-30);
+  --line-height-3xl: var(--line-height-34);
+  --line-height-display: var(--line-height-32);
+  --font-weight-regular: var(--font-weight-450);
+  --font-weight-medium: var(--font-weight-500);
+  --font-weight-semibold: var(--font-weight-600);
+  --font-weight-bold: var(--font-weight-700);
+  --letter-spacing-tight: var(--letter-spacing-neg-1);
+  --letter-spacing-display: var(--letter-spacing-neg-016);
+  --font-feature-tabular: var(--font-feature-tnum);
+
+  /* ---------- 间距 ---------- */
+  --space-3xs: var(--size-2);
+  --space-2xs: var(--size-4);
+  --space-xs: var(--size-6);
+  --space-sm: var(--size-8);
+  --space-md: var(--size-10);
+  --space-lg: var(--size-12);
+  --space-xl: var(--size-16);
+  --space-2xl: var(--size-20);
+  --space-3xl: var(--size-24);
+  --space-4xl: var(--size-32);
+  --space-5xl: var(--size-40);
+
+  /* ---------- 圆角 ---------- */
+  --radius-xs: var(--size-2);
+  --radius-sm: var(--size-6);
+  --radius-md: var(--size-8);
+  --radius-lg: var(--size-10);
+  --radius-xl: var(--size-12);
+  --radius-2xl: var(--size-14);
+  --radius-3xl: var(--size-16);
+  --radius-pill: var(--size-999);
+  --radius-circle: var(--percent-50);
+
+  /* ---------- 线宽与图标 ---------- */
+  /* 细线：Retina 上为 1 物理像素，1 倍屏上浏览器取整为 1px */
+  --border-width: var(--size-0-5);
+  /* 侧栏分组 / 树形展开用的实心小三角（Linear 同款） */
+  --icon-size-2xs: var(--size-10);
+  --icon-size-xs: var(--size-12);
+  --icon-size-sm: var(--size-14);
+  --icon-size-md: var(--size-16);
+  --icon-size-lg: var(--size-18);
+  /* Icons 出口（Nucleo，20 网格）的线宽：14px 下约 1.2px；侧栏开关保持 16px / 2 线宽 */
+  --icon-stroke-width-thin: var(--stroke-width-1-5);
+  --icon-stroke-width: var(--stroke-width-1-75);
+  /* 自绘线条图标（24 网格：搜索框、展开箭头、加载、提示）的线宽 */
+  --icon-stroke-width-medium: var(--stroke-width-2);
+  --icon-stroke-width-bold: var(--stroke-width-2-5);
+
+  /* ---------- 动效 ---------- */
+  --duration-instant: var(--duration-0);
+  --duration-fast: var(--duration-100);
+  --duration-base: var(--duration-150);
+  --duration-slow: var(--duration-250);
+  --duration-layout: var(--duration-300);
+  --duration-spin: var(--duration-800);
+  --easing-emphasized: var(--easing-out-expo);
+  /* 浮层出现 / 消失时的缩放 */
+  --scale-pop: var(--scale-96);
+  --scale-pop-subtle: var(--scale-98);
+
+  /* ---------- 透明度与层级 ---------- */
+  --opacity-disabled: var(--opacity-60);
+  --opacity-secondary: var(--opacity-70);
+  --z-index-window-controls: var(--z-20);
+  --z-index-dragging: var(--z-20);
+  --z-index-toast: var(--z-50);
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ground: var(--color-gray-975);
+    --surface: var(--color-gray-925);
+    --surface-raised: var(--color-gray-875);
+    --sunken: var(--color-gray-875);
+    --hover: var(--color-white-a6);
+    --surface-window: var(--color-gray-975);
+    --surface-canvas: var(--color-gray-950);
+    --surface-inverse: var(--color-gray-10);
+    --overlay: var(--color-black-a55);
+
+    --fill-translucent-hover: var(--color-white-a4);
+    --fill-translucent-selected: var(--color-white-a8);
+    --fill-translucent-active: var(--color-white-a10);
+    --border-translucent: var(--color-white-a8);
+
+    /* 深色模式单独选色（不是自动反转）：量越大越亮 */
+    --viz-series-1: var(--color-viz-blue-400);
+    --viz-series-2: var(--color-viz-orange-600);
+    --viz-seq-empty: var(--color-gray-850);
+    --viz-seq-1: var(--color-viz-blue-600);
+    --viz-seq-2: var(--color-viz-blue-500);
+    --viz-seq-3: var(--color-viz-blue-400);
+    --viz-seq-4: var(--color-viz-blue-250);
+
+    --border: var(--color-gray-850);
+    --border-strong: var(--color-gray-750);
+    --border-canvas: var(--color-gray-850);
+    --border-popover: var(--color-gray-800);
+
+    --ink: var(--color-gray-10);
+    --ink-2: var(--color-gray-450);
+    --ink-3: var(--color-gray-550);
+    --ink-inverse: var(--color-gray-975);
+    --ink-window-2: var(--color-gray-450);
+    --ink-window-3: var(--color-gray-550);
+
+    --accent: var(--color-indigo-400);
+    --accent-hover: var(--color-indigo-300);
+    --accent-soft: var(--color-indigo-900);
+    --accent-ink: var(--color-indigo-200);
+    --on-accent: var(--color-white);
+    --success: var(--color-green-300);
+    --success-soft: var(--color-green-900);
+    --attention: var(--color-orange-300);
+    --attention-soft: var(--color-orange-900);
+    --attention-ink: var(--color-orange-300);
+    --attention-wash: var(--color-orange-950);
+    --danger: var(--color-red-300);
+    --danger-border: var(--color-red-850);
+    --danger-wash: var(--color-red-950);
+    --danger-ink: var(--color-red-200);
+    --disabled-bg: var(--color-gray-800);
+    --disabled-ink: var(--color-gray-550);
+
+    --shadow-popup:
+      0 var(--size-6) var(--size-18) var(--color-black-a24),
+      0 var(--size-1) var(--size-1) var(--color-black-a40);
+    --shadow-dialog: 0 var(--size-24) var(--size-48) var(--color-black-a55);
+
+    color-scheme: dark;
+  }
+}

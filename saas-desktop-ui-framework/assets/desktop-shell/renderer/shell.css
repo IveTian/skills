@@ -1,0 +1,820 @@
+/*
+ * 桌面窗口布局（Cursor / Linear / ChatGPT 的共同结构）：
+ * 无标题栏 → 侧栏位于实色窗口底（--chrome）上，内容是一块带圆角与 1px 边框的面板（--canvas）。
+ * 组件外观全部来自 @diotia/ui；这里只有布局，颜色一律使用设计变量。
+ */
+
+/*
+ * 标题栏几何（Linear 桌面版）：窗口顶部一整行 44px 标题栏，红绿灯、窗口按钮组、标签栏共用中线 22px。
+ * - 红绿灯：主进程按 trafficLightPosition.y = (44 - 14) / 2 定位；
+ * - 窗口按钮组：固定定位，高 --titlebar-h，横向起点为系统提供的 env(titlebar-area-x)（红绿灯之后）；
+ * - 标签栏：侧栏展开时从内容面板左缘开始，收起时紧跟窗口按钮组；
+ * - 标题栏下方是侧栏与内容面板，面板顶栏 44px。
+ */
+:root {
+  --titlebar-h: var(--size-44);
+  --panel-gap: var(--size-8);
+  --panel-header-h: var(--size-44);
+  --workspace-badge-size: var(--size-22);
+  /* 设置页（Linear 实测，ADR 0018 附录） */
+  --settings-nav-width: 230px;
+  --settings-page-width: 640px;
+  --settings-page-padding-top: var(--size-64);
+  --settings-wide-padding-x: 56px;
+  --settings-row-min-height: 60px;
+  --settings-list-head-height: var(--size-48);
+  --settings-tile-size: var(--size-32);
+  --settings-select-height: 30px;
+  --settings-select-padding-right: var(--size-28);
+  --settings-select-max-width: 280px;
+  --settings-input-width: 256px;
+  --settings-card-shadow: 0 0 0 var(--border-width) var(--border-translucent), var(--shadow-raised);
+  --members-search-width: 300px;
+  --members-columns: minmax(0, 1.4fr) minmax(0, 1.6fr) 120px 120px var(--size-32);
+  --members-row-height: 50px;
+  --members-head-height: var(--size-32);
+  --members-avatar-size: var(--size-24);
+  --members-badge-radius: var(--size-3);
+  --explorer-side-width: 300px;
+  --explorer-select-width: 150px;
+  --viz-swatch-size: var(--size-10);
+  --viz-meter-width: 120px;
+  --viz-meter-height: var(--size-6);
+  --viz-grid-dash: 2 3;
+  /* 主题编辑器（ADR 0019）：内置主题样张固定用浅色 / 深色的取值，不随当前主题变化 */
+  --theme-chip-height: var(--size-22);
+  --theme-chip-dot-size: var(--size-6);
+  --theme-chip-light-bg: var(--color-white);
+  --theme-chip-light-ink: var(--color-gray-900);
+  --theme-chip-light-accent: var(--color-indigo-500);
+  --theme-chip-dark-bg: var(--color-gray-925);
+  --theme-chip-dark-ink: var(--color-gray-10);
+  --theme-chip-dark-accent: var(--color-indigo-400);
+  --controls-left: var(--size-12);
+  --controls-left-mac: 84px;
+  --controls-w: var(--size-88);
+}
+/*
+ * macOS：红绿灯位于 x = 18（window.ts），三个按钮共占到 x = 72。系统覆盖区的起点（env(titlebar-area-x)，
+ * 实测 96px）留白过多，开关图标离红绿灯约 30px；改为紧跟红绿灯：按钮左缘 84px，图标距红绿灯 18px（2026-10-12 产品负责人调整）。
+ */
+html[data-platform='darwin'] {
+  --controls-left: var(--controls-left-mac);
+}
+
+/*
+ * 桌面端组件变量（设计变量第三层，见 docs/adr/0008-design-tokens.md）：
+ * 只属于桌面窗口与各视图的尺寸。引用语义层或基础层尺寸刻度，布局宽度可直接写 px。
+ */
+:root {
+  --panel-radius: var(--radius-xl);
+  /* Linear：侧栏 238px，行左右各留 12px */
+  --sidebar-width: 238px;
+  --sidebar-scroll-bleed: var(--size-neg-12);
+  /* 档案卡片宽 = 320 - 右侧留白 8 */
+  --dossier-width: 320px;
+  --breadcrumb-max-width: 220px;
+  --gate-drag-height: var(--size-48);
+  --gate-card-max-width: 420px;
+  --gate-card-radius: var(--radius-xl);
+  --gate-note-padding-x: var(--size-14);
+  --brand-mark-size: var(--size-32);
+  --brand-mark-radius: var(--size-9);
+  --brand-mark-dot-size: var(--size-11);
+  --view-narrow-max-width: 560px;
+  --new-view-max-width: 720px;
+  --new-view-gap: var(--size-14);
+  --new-view-padding-x: var(--size-48);
+  --new-view-padding-bottom: var(--size-72);
+  --activity-max-width: 820px;
+  --chat-max-width: 760px;
+  --chat-empty-max-width: 440px;
+  --chat-composer-radius: var(--radius-lg);
+  --tune-max-width: 640px;
+  /* 标签页：等分可用宽度，最宽 220、最窄 40；高 28、圆角 8 */
+  --tab-height: var(--size-28);
+  --tab-max-width: 220px;
+  --tab-min-width: 40px;
+  --tab-radius: var(--radius-md);
+  --tab-gap: var(--size-2);
+  --tab-close-size: var(--size-20);
+  --tab-title-fade: var(--size-16);
+  --tune-gap: var(--size-28);
+}
+
+/* ---------- 排版 ---------- */
+.muted {
+  color: var(--ink-3);
+}
+.meta {
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-xs);
+  color: var(--ink-3);
+}
+.row-title {
+  font-size: var(--font-size-sm);
+}
+.text-error {
+  font-size: var(--font-size-sm);
+  color: var(--danger);
+}
+.spacer {
+  flex: 1;
+}
+.section-title {
+  font-size: var(--font-size-lg);
+  line-height: var(--line-height-md);
+  font-weight: var(--font-weight-semibold);
+}
+.with-tag {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+}
+.notice-box {
+  border: var(--border-width) solid var(--attention);
+  background: var(--attention-wash);
+  border-radius: var(--radius-md);
+  padding: var(--space-md) var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  font-size: var(--font-size-sm);
+}
+.plain-list,
+.row-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.sessions li {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3xs);
+  padding: var(--space-md) 0;
+  border-bottom: var(--border-width) solid var(--border);
+}
+.ui-menu__item--danger {
+  color: var(--danger);
+}
+
+/* ---------- 窗口框架 ---------- */
+.frame {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--chrome);
+  color: var(--ink);
+}
+.frame[hidden] {
+  display: none;
+}
+.frame-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+/* 内容面板在标题栏下方，与窗口右、下边缘间隙 8px；左侧间隙由侧栏外壳提供（收起时外壳宽 8px） */
+.panel {
+  flex: 1;
+  margin: 0 var(--panel-gap) var(--panel-gap) 0;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--canvas);
+  border: var(--border-width) solid var(--canvas-border);
+  border-radius: var(--panel-radius);
+  box-shadow: var(--shadow-raised);
+  overflow: hidden;
+}
+
+/* ---------- 侧栏 ---------- */
+/*
+ * 展开 / 收起：外壳宽度 238px ↔ --panel-gap（8px，收起后即内容面板的左间隙），由 .t-resize 过渡；
+ * 内部侧栏保持 238px 宽，被外壳裁切而不是挤压重排。收起动画结束后才设为 visibility: hidden
+ * （不可点击、不可 Tab 聚焦、读屏不朗读）；展开时立即可见。
+ */
+.sidebar-shell {
+  flex: none;
+  width: var(--sidebar-width);
+  overflow: hidden;
+}
+.sidebar-shell.is-collapsed {
+  width: var(--panel-gap);
+}
+.sidebar-shell > .sidebar {
+  width: var(--sidebar-width);
+  height: 100%;
+  visibility: visible;
+  transition: visibility 0s linear 0s;
+}
+.sidebar-shell.is-collapsed > .sidebar {
+  visibility: hidden;
+  transition: visibility 0s linear var(--resize-dur);
+}
+.sidebar {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  /* 首行中线与面板顶栏中线对齐（8 + 14 = 0.5 + 22） */
+  padding: var(--space-sm) var(--space-lg) var(--space-xs);
+}
+/*
+ * 窗口按钮组：开关在左，后退 / 前进组在右（space-between）。收起时宽度 = 三个按钮（--controls-w）；
+ * 展开时右缘对齐侧栏内容右缘（侧栏宽 - 侧栏内边距），后退 / 前进随宽度过渡滑到侧栏右侧。
+ * 与侧栏外壳同一时长与缓动，可中途反向。按钮之间的空白可拖动窗口（ui-drag，按钮本身不可拖动）。
+ */
+.window-controls {
+  position: fixed;
+  top: 0;
+  left: var(--controls-left);
+  width: var(--controls-w);
+  height: var(--titlebar-h);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3xs);
+  z-index: var(--z-index-window-controls);
+  transition: width var(--resize-dur) var(--resize-ease);
+}
+.window-controls--sidebar {
+  width: calc(var(--sidebar-width) - var(--space-lg) - var(--controls-left));
+}
+.window-controls__history {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3xs);
+}
+/* 窗口按钮悬停 / 按下不铺底色，只靠图标变深作反馈 */
+.window-controls .ui-button--icon:hover,
+.window-controls .ui-button--icon:active {
+  background: transparent;
+}
+.sidebar-primary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sidebar-row-gap);
+  flex: none;
+}
+.sidebar-scroll {
+  flex: 1;
+  margin: 0 var(--sidebar-scroll-bleed);
+}
+.sidebar-scroll .ui-scroll__viewport {
+  padding: 0 var(--space-lg) var(--space-lg);
+}
+.sidebar-empty {
+  padding: var(--space-2xs) var(--space-md);
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-xs);
+  color: var(--chrome-ink-3);
+}
+.sidebar-note {
+  padding-top: var(--space-sm);
+}
+ * ---------- 设置页（2026-10-12 按 Linear 设置页实测规格重做，见 ADR 0018 附录） ----------
+ * 侧栏导航 230 宽：分组名与条目同为 13/500 次要色，条目 28 高、圆角 8。
+ * 居中单栏 640：标题 24/32、距面板顶 64；标题 → 首个分组 32；分组标题 15/500 → 卡片 16；
+ * 卡片 → 下一分组 48；同组卡片间 10。卡片白底、圆角 10、无边框（0.5px 半透明描边阴影 + 两层极淡投影）。
+ * 行：最小 60 高、内边距 16、间距 12；行间 0.5px 分隔线左右内缩 16。
+ */
+.settings-nav {
+  flex: none;
+  width: var(--settings-nav-width);
+}
+.settings-nav__group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sidebar-row-gap);
+}
+.settings-nav__group + .settings-nav__group {
+  margin-top: var(--sidebar-section-gap);
+}
+.settings-nav__label {
+  height: var(--sidebar-item-height);
+  display: flex;
+  align-items: center;
+  padding: 0 var(--sidebar-item-padding-x);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--chrome-ink-2);
+}
+.settings-scroll {
+  flex: 1;
+  min-height: 0;
+}
+.settings-page {
+  width: 100%;
+  max-width: calc(var(--settings-page-width) + 2 * var(--space-3xl));
+  margin: 0 auto;
+  padding: var(--settings-page-padding-top) var(--space-3xl) var(--settings-page-padding-top);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4xl);
+}
+.settings-page--wide {
+  max-width: none;
+  padding: var(--settings-page-padding-top) var(--settings-wide-padding-x);
+}
+.settings-page--bare {
+  max-width: none;
+  height: 100%;
+  padding: 0;
+}
+.settings-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+.settings-title {
+  font-size: var(--font-size-display);
+  line-height: var(--line-height-display);
+  letter-spacing: var(--letter-spacing-display);
+  font-weight: var(--font-weight-medium);
+}
+.settings-desc {
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-sm);
+  color: var(--ink-2);
+}
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+}
+/* 卡片 → 下一分组 48（页面间距 32 + 16） */
+.settings-section + .settings-section {
+  margin-top: var(--space-xl);
+}
+.settings-section__head {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-lg);
+}
+.settings-section__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+}
+.settings-section__title {
+  font-size: var(--font-size-lg);
+  line-height: var(--line-height-md);
+  font-weight: var(--font-weight-medium);
+}
+.settings-section__cards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+.settings-card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--settings-card-shadow);
+}
+.settings-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+  min-height: var(--settings-row-min-height);
+  padding: var(--space-lg) var(--space-xl);
+}
+/* 行间分隔线：左右内缩 16 */
+.settings-row + .settings-row::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: var(--space-xl);
+  right: var(--space-xl);
+  border-top: var(--border-width) solid var(--border-translucent);
+}
+.settings-row--head {
+  min-height: var(--settings-list-head-height);
+  padding-top: var(--space-xs);
+  padding-bottom: var(--space-xs);
+}
+.settings-row--head .settings-row__label {
+  flex: 1;
+  color: var(--ink-2);
+}
+.settings-row__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3xs);
+  text-align: left;
+}
+.settings-row__label {
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--ink);
+}
+.settings-row--muted .settings-row__label {
+  color: var(--ink-2);
+}
+.settings-row__desc {
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-xs);
+  font-weight: var(--font-weight-regular);
+  color: var(--ink-2);
+}
+.settings-row__control {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+.settings-value {
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-sm);
+  color: var(--ink-2);
+}
+.settings-current {
+  color: var(--success);
+  font-weight: var(--font-weight-medium);
+}
+.settings-tile {
+  flex: none;
+  width: var(--settings-tile-size);
+  height: var(--settings-tile-size);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  background: var(--sunken);
+  color: var(--ink-2);
+}
+.settings-tile .ui-icon,
+.settings-tile svg {
+  width: var(--icon-size-md);
+  height: var(--icon-size-md);
+}
+/* 入口卡片：整张可点击 */
+.ui-button--card.settings-link {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-lg);
+  min-height: var(--settings-row-min-height);
+  padding: var(--space-lg) var(--space-xl);
+  border: 0;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+.ui-button--card.settings-link:hover {
+  background: var(--surface-raised);
+}
+.settings-link__chevron {
+  flex: none;
+  width: var(--icon-size-sm);
+  height: var(--icon-size-sm);
+  color: var(--ink-3);
+}
+/* 文字按钮（Linear 的「Manage」「Revoke all」）：正文色，悬停铺浅底 */
+.ui-button--ghost.settings-text-button {
+  height: var(--button-height-sm);
+  padding: 0 var(--space-sm);
+  color: var(--ink);
+}
+.ui-button--ghost.settings-text-button:hover {
+  color: var(--ink);
+  background: var(--hover);
+}
+.ui-button--ghost.settings-text-button--danger,
+.ui-button--ghost.settings-text-button--danger:hover {
+  color: var(--danger);
+}
+.settings-text-button .ui-icon,
+.settings-text-button svg {
+  width: var(--icon-size-sm);
+  height: var(--icon-size-sm);
+}
+/* 胶囊按钮（设置页内的主要 / 次要操作，32 高） */
+.ui-button.settings-pill {
+  border-radius: var(--radius-pill);
+}
+/* 选择框：30 高、圆角 8、白底细描边、13/400，右侧小箭头 */
+.settings-select {
+  font: inherit;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  max-width: var(--settings-select-max-width);
+  height: var(--settings-select-height);
+  padding: 0 var(--settings-select-padding-right) 0 var(--space-md);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--settings-card-shadow);
+  color: var(--ink);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.settings-select:hover,
+.settings-select[data-popup-open] {
+  background: var(--surface-raised);
+}
+.settings-select[data-disabled] {
+  color: var(--disabled-ink);
+  cursor: not-allowed;
+}
+.settings-select__value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.settings-select__chevron {
+  position: absolute;
+  right: var(--space-md);
+  width: var(--icon-size-2xs);
+  height: var(--icon-size-2xs);
+  stroke-width: var(--icon-stroke-width-thin);
+  color: var(--ink-2);
+}
+.settings-select--pill {
+  height: var(--button-height-sm);
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-xs);
+}
+/* 行内输入框（改完失焦或回车即保存）：宽 256、32 高 */
+.settings-input {
+  width: var(--settings-input-width);
+}
+.settings-input .ui-field__control {
+  box-shadow: none;
+}
+.settings-field-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-xs);
+}
+.notice-box + .settings-section {
+  margin-top: 0;
+}
+
+/* ---------- 主题编辑器（ADR 0019）：选择框中的「Aa」样张、颜色色块 ---------- */
+.settings-select__option {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+.settings-select .theme-chip {
+  margin-right: var(--space-sm);
+}
+.theme-chip {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  height: var(--theme-chip-height);
+  padding: 0 var(--space-xs);
+  border-radius: var(--radius-sm);
+  background: var(--theme-chip-bg);
+  color: var(--theme-chip-ink);
+  box-shadow: 0 0 0 var(--border-width) var(--border-translucent);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-none);
+}
+.theme-chip__dot {
+  width: var(--theme-chip-dot-size);
+  height: var(--theme-chip-dot-size);
+  border-radius: var(--radius-circle);
+  background: var(--theme-chip-accent);
+}
+.theme-chip--light,
+.theme-chip--custom-light {
+  --theme-chip-bg: var(--theme-chip-light-bg);
+  --theme-chip-ink: var(--theme-chip-light-ink);
+  --theme-chip-accent: var(--theme-chip-light-accent);
+}
+.theme-chip--dark,
+.theme-chip--custom-dark {
+  --theme-chip-bg: var(--theme-chip-dark-bg);
+  --theme-chip-ink: var(--theme-chip-dark-ink);
+  --theme-chip-accent: var(--theme-chip-dark-accent);
+}
+.settings-row__control .ui-color-picker .ui-field__control {
+  box-shadow: none;
+}
+
+/* ---------- 标题栏与标签栏（交互对照 Chrome，外观对照 Linear 桌面版） ---------- */
+/* 侧栏展开时标签栏从内容面板左缘开始，收起时紧跟窗口按钮组（右缘 + 12px）；与侧栏外壳同步过渡 */
+.titlebar {
+  flex: none;
+  height: var(--titlebar-h);
+  display: flex;
+  align-items: center;
+  padding: 0 var(--panel-gap) 0 calc(var(--controls-left) + var(--controls-w) + var(--space-lg));
+  transition: padding-left var(--resize-dur) var(--resize-ease);
+}
+.titlebar--sidebar {
+  padding-left: var(--sidebar-width);
+}
+.tabstrip {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
+}
+/*
+ * 标签页等分可用宽度：每个以 --tab-max-width 为基准、可收缩到 --tab-min-width。
+ * 标签页是尺寸容器（对外内容宽度为 0），列表不能用 auto 按内容定宽，否则会被压到最小宽度；
+ * 改由标签页数量（--tab-count，TabStrip 内联设置）给出基准宽度，空间不足时再收缩。
+ */
+.tabstrip__list {
+  flex: 0 1 calc(var(--tab-count) * var(--tab-max-width) + (var(--tab-count) - 1) * var(--tab-gap));
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--tab-gap);
+}
+/* 用鼠标关闭后保持原宽度，直到指针离开标签栏（下一个关闭按钮正好落在指针下） */
+.tabstrip__list--frozen {
+  flex-basis: calc(
+    var(--tab-count) * var(--tab-frozen-width) + (var(--tab-count) - 1) * var(--tab-gap)
+  );
+}
+.tabstrip__list--frozen .tab {
+  flex: none;
+  width: var(--tab-frozen-width);
+}
+.tab {
+  position: relative;
+  container-type: inline-size;
+  flex: 0 1 var(--tab-max-width);
+  min-width: var(--tab-min-width);
+  height: var(--tab-height);
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 0 var(--space-2xs) 0 var(--space-md);
+  border-radius: var(--tab-radius);
+  color: var(--chrome-ink-2);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  user-select: none;
+  transition:
+    background-color var(--duration-base),
+    color var(--duration-base),
+    transform var(--duration-slow) var(--easing-emphasized);
+}
+.tab:hover {
+  background: var(--chrome-hover);
+  color: var(--ink);
+  transition-duration: var(--duration-instant), var(--duration-instant), var(--duration-slow);
+}
+.tab[aria-selected='true'] {
+  background: var(--canvas);
+  color: var(--ink);
+  box-shadow:
+    0 0 0 var(--border-width) var(--canvas-border),
+    var(--shadow-raised);
+}
+/* 被拖动的标签页跟随指针（不过渡）并浮在其他标签页之上 */
+.tab--dragging {
+  z-index: var(--z-index-dragging);
+  transition: none;
+}
+.tabstrip--settling .tab {
+  transition: none;
+}
+.tab__icon {
+  display: inline-flex;
+  flex: none;
+}
+/* 标题过长时尾部淡出（Chrome 做法），而不是省略号 */
+.tab__title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  mask-image: linear-gradient(to right, black calc(100% - var(--tab-title-fade)), transparent);
+}
+.tab__close.ui-button--icon {
+  flex: none;
+  width: var(--tab-close-size);
+  height: var(--tab-close-size);
+  color: var(--ink-2);
+  opacity: 0;
+}
+.tab:hover .tab__close.ui-button--icon,
+.tab[aria-selected='true'] .tab__close.ui-button--icon {
+  opacity: 1;
+}
+/* 变窄时：非当前标签页隐藏关闭按钮；再窄只留图标，当前标签页只留关闭按钮（Chrome 行为） */
+@container (max-width: 72px) {
+  .tab[aria-selected='false'] .tab__close {
+    display: none;
+  }
+}
+@container (max-width: 48px) {
+  .tab__title,
+  .tab[aria-selected='true'] .tab__icon {
+    display: none;
+  }
+}
+
+/* ---------- 内容面板顶栏 ---------- */
+.panel-header {
+  height: var(--panel-header-h);
+  flex: none;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-lg);
+  padding: 0 var(--space-md) 0 var(--space-lg);
+}
+.panel-header--bordered {
+  border-bottom: var(--border-width) solid var(--border);
+}
+.panel-header__leading,
+.panel-header__trailing {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3xs);
+  min-width: 0;
+}
+.panel-header__trailing {
+  justify-content: flex-end;
+}
+.panel-title {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  padding-left: var(--space-2xs);
+}
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3xs);
+  min-width: 0;
+  font-size: var(--font-size-sm);
+}
+.breadcrumb .ui-button--quiet {
+  /* Linear：顶栏里的可点标题是胶囊按钮 */
+  height: var(--button-height-sm);
+  border-radius: var(--radius-pill);
+  font-weight: var(--font-weight-medium);
+  color: var(--ink-2);
+  max-width: var(--breadcrumb-max-width);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.breadcrumb .ui-button--quiet[aria-current='page'] {
+  color: var(--ink);
+}
+.breadcrumb-sep.ui-icon {
+  width: var(--icon-size-xs);
+  height: var(--icon-size-xs);
+  color: var(--ink-3);
+}
+.breadcrumb-current {
+  font-weight: var(--font-weight-medium);
+  padding: 0 var(--space-xs);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* ---------- 视图通用 ---------- */
+.view {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.view-scroll {
+  flex: 1;
+}
+.view-pad {
+  padding: var(--space-3xl);
+}
+.view-narrow {
+  max-width: var(--view-narrow-max-width);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+/* 新建 */
+.new-view {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;

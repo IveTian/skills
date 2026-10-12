@@ -1,0 +1,188 @@
+/*
+ * 设计变量 · 第一层：基础（Primitive）。见 docs/adr/0008-design-tokens.md。
+ * 只描述「值本身」（某个灰、某个尺寸），不描述用途；也是唯一允许出现字面量的一层。
+ * 组件样式不得直接引用本层，必须经语义层（semantic.css）或组件层（components.css）。
+ */
+:root {
+  /* ---------- 颜色：中性灰（取自 Linear，几乎无色相；数字越大越深） ---------- */
+  --color-white: #ffffff;
+  --color-black: #000000;
+  /* 色相光谱（颜色选择器的色相滑杆，ADR 0019） */
+  --color-spectrum-0: #ff0000;
+  --color-spectrum-60: #ffff00;
+  --color-spectrum-120: #00ff00;
+  --color-spectrum-180: #00ffff;
+  --color-spectrum-240: #0000ff;
+  --color-spectrum-300: #ff00ff;
+  --color-gray-10: #f7f8f8;
+  --color-gray-25: #f9f9fa;
+  --color-gray-50: #efeff0;
+  --color-gray-75: #e8e8e8;
+  --color-gray-100: #e2e2e2;
+  --color-gray-150: #d3d3d3;
+  --color-gray-400: #9c9d9f;
+  --color-gray-450: #8a8a8e;
+  --color-gray-550: #6f6f74;
+  --color-gray-600: #5c5c5e;
+  --color-gray-750: #2e2f32;
+  --color-gray-800: #28282b;
+  --color-gray-850: #212224;
+  --color-gray-875: #1e1e20;
+  --color-gray-900: #1b1b1b;
+  --color-gray-925: #19191b;
+  --color-gray-950: #121213;
+  --color-gray-975: #09090a;
+
+  /* ---------- 颜色：靛蓝（强调，取自 Linear） ---------- */
+  --color-indigo-50: #ecedfa;
+  --color-indigo-200: #b5bbf5;
+  --color-indigo-300: #8f98ea;
+  --color-indigo-400: #7a84e0;
+  --color-indigo-500: #6d78d5;
+  --color-indigo-600: #5e6ac1;
+  --color-indigo-900: #23253f;
+
+  /* ---------- 颜色：绿 / 橙 / 红（状态） ---------- */
+  --color-green-50: #e3f2ea;
+  --color-green-300: #7fd6a6;
+  --color-green-700: #1f7a4d;
+  --color-green-900: #1c3a2b;
+
+  /*
+   * 数据可视化（dataviz 参考色板，2026-10-12 用 validate_palette.js 对本应用表面核验：
+   * 两个类别色在白底 / #19191b 上全部检查通过；热力图四级蓝在两种模式下单调、可辨）。
+   */
+  --color-viz-blue-250: #86b6ef;
+  --color-viz-blue-350: #5598e7;
+  --color-viz-blue-400: #3987e5;
+  --color-viz-blue-450: #2a78d6;
+  --color-viz-blue-500: #256abf;
+  --color-viz-blue-600: #184f95;
+  --color-viz-blue-650: #104281;
+  --color-viz-orange-500: #eb6834;
+  --color-viz-orange-600: #d95926;
+  --color-orange-25: #fdf7f0;
+  --color-orange-50: #fbeedf;
+  --color-orange-300: #f3b27a;
+  --color-orange-700: #b4530a;
+  --color-orange-800: #a04a08;
+  --color-orange-900: #3a2614;
+  --color-orange-950: #241a10;
+
+  --color-red-25: #fdf6f5;
+  --color-red-150: #e9b8b4;
+  --color-red-200: #ffb1aa;
+  --color-red-300: #ff8a80;
+  --color-red-600: #c0322b;
+  --color-red-800: #8e241f;
+  --color-red-850: #6b2b27;
+  --color-red-950: #241413;
+
+  /* ---------- 颜色：透明度色（叠加、阴影、遮罩） ---------- */
+  --color-black-a2: rgb(0 0 0 / 0.02);
+  --color-black-a3-5: rgb(0 0 0 / 0.035);
+  --color-black-a4: rgb(0 0 0 / 0.04);
+  --color-black-a6: rgb(0 0 0 / 0.06);
+  --color-black-a8: rgb(0 0 0 / 0.08);
+  --color-black-a12: rgb(0 0 0 / 0.12);
+  --color-black-a20: rgb(0 0 0 / 0.2);
+  --color-black-a24: rgb(0 0 0 / 0.24);
+  --color-black-a40: rgb(0 0 0 / 0.4);
+  --color-black-a55: rgb(0 0 0 / 0.55);
+  --color-white-a4: rgb(255 255 255 / 0.04);
+  --color-white-a6: rgb(255 255 255 / 0.06);
+  --color-white-a8: rgb(255 255 255 / 0.08);
+  --color-white-a10: rgb(255 255 255 / 0.1);
+  --color-gray-400-a45: rgb(156 157 159 / 0.45);
+
+  /* ---------- 尺寸（间距、尺寸、圆角共用的像素刻度） ---------- */
+  --size-0-5: 0.5px;
+  --size-1: 1px;
+  --size-2: 2px;
+  --size-3: 3px;
+  --size-4: 4px;
+  --size-5: 5px;
+  --size-6: 6px;
+  --size-7: 7px;
+  --size-8: 8px;
+  --size-9: 9px;
+  --size-10: 10px;
+  --size-11: 11px;
+  --size-12: 12px;
+  --size-14: 14px;
+  --size-16: 16px;
+  --size-18: 18px;
+  --size-20: 20px;
+  --size-22: 22px;
+  --size-24: 24px;
+  --size-26: 26px;
+  --size-28: 28px;
+  --size-32: 32px;
+  --size-36: 36px;
+  --size-40: 40px;
+  --size-44: 44px;
+  --size-48: 48px;
+  --size-64: 64px;
+  --size-72: 72px;
+  --size-88: 88px;
+  --size-999: 999px;
+  --size-neg-2: -2px;
+  --size-neg-4: -4px;
+  --size-neg-12: -12px;
+  --percent-50: 50%;
+
+  /* ---------- 字体 ---------- */
+  /* Inter（随包打包，@fontsource-variable/inter）；中文回落到系统字体（苹方 / 微软雅黑） */
+  --font-family-inter:
+    'Inter Variable', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', 'PingFang SC',
+    'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  /* 等宽：系统自带（代码块、命令输出） */
+  --font-family-system-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --font-size-11: 11px;
+  --font-size-12: 12px;
+  --font-size-13: 13px;
+  --font-size-14: 14px;
+  --font-size-15: 15px;
+  --font-size-16: 16px;
+  --font-size-18: 18px;
+  --font-size-22: 22px;
+  --font-size-24: 24px;
+  --font-size-26: 26px;
+  --line-height-1: 1;
+  --line-height-18: 18px;
+  --line-height-20: 20px;
+  --line-height-22: 22px;
+  --line-height-24: 24px;
+  --line-height-26: 26px;
+  --line-height-30: 30px;
+  --line-height-32: 32px;
+  --line-height-34: 34px;
+  --font-weight-450: 450;
+  --font-weight-500: 500;
+  --font-weight-600: 600;
+  --font-weight-700: 700;
+  --letter-spacing-neg-1: -0.01em;
+  --letter-spacing-neg-016: -0.16px;
+  --font-feature-tnum: 'tnum';
+
+  /* ---------- 动效 ---------- */
+  --duration-0: 0ms;
+  --duration-100: 100ms;
+  --duration-150: 150ms;
+  --duration-250: 250ms;
+  --duration-300: 300ms;
+  --duration-800: 0.8s;
+  --easing-out-expo: cubic-bezier(0.22, 1, 0.36, 1);
+  --scale-96: 0.96;
+  --scale-98: 0.98;
+
+  /* ---------- 其他 ---------- */
+  --opacity-60: 0.6;
+  --opacity-70: 0.7;
+  --stroke-width-1-5: 1.5;
+  --stroke-width-1-75: 1.75;
+  --stroke-width-2: 2;
+  --stroke-width-2-5: 2.5;
+  --z-20: 20;
+  --z-50: 50;
+}
